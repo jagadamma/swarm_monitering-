@@ -3,7 +3,7 @@ scrape_configs:
 - job_name: cadvisor
   scrape_interval: 5s
   static_configs:
-    - targets: ["3.145.176.35:8090"]
+    - targets: ['34.228.142.83:8090','13.59.225.58:8090']
 - job_name:  prometheus
   scrape_interval: 5s
   static_configs:
@@ -11,13 +11,8 @@ scrape_configs:
 - job_name: grafana
   scrape_interval: 5s
   static_configs:    
-    - targets: ["3.145.176.35:3005"]
+    - targets: ['34.228.142.83:3000']
 - job_name: node_expoter
   scrape_interval: 5s
   static_configs:
-    - targets: ["3.145.176.35:9100"]
-      
-
-    
-    
-  
+    - targets: ['34.228.142.83:9100','13.59.225.58:9100']

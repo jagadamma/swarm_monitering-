@@ -4,21 +4,28 @@ services:
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
-    restart: on-failure
+    restart: always
     ports:
-    - 9090:9090
+      - 9090:9090
+    networks:
+      - private
+      - public  
     command:
     - --config.file=/etc/prometheus/prometheus.yml
+    networks:
+      - public  
     volumes:
     - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
     depends_on:
     - web  
     - cadvisor
-    - redis  
   cadvisor:
     image: gcr.io/google-containers/cadvisor:latest
     container_name: cadvisor
-    restart: on-failure  
+    restart: always
+    networks:
+      - private
+      - public  
     ports:
       - 8090:8080
     volumes:
@@ -26,6 +33,8 @@ services:
       - /var/run:/var/run:rw
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
+    deploy:
+       mode: global    
   node-exporter:
     image: prom/node-exporter:latest
     container_name: node-exporter
@@ -34,6 +43,8 @@ services:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
       - /:/rootfs:ro
+    networks:
+      - private
     command:
       - '--path.procfs=/host/proc'
       - '--path.rootfs=/rootfs'
@@ -41,19 +52,30 @@ services:
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
     ports:
       - 9100:9100
-  grafana:
-    image: grafana/grafana
-    user: "1000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=password
-    depends_on:
-      - prometheus
-    restart: on-failure    
-    ports:
-      - 3005:3000    
-  web:
+    deploy:
+      mode: global 
+  appache:
      image: httpd:latest
-     container_name: c1
+     container_name: appache
      ports:
-      - 7070:80 
-    
+       - 7070:80 
+     deploy:
+      placement:
+       constraints:
+         - node.role == worker    
+  nginx:    
+     image: nginx:latest
+     container_name: nginx
+     ports:
+       - 6060:80  
+     deploy:
+       placement:
+        constraints:
+          - node.role == worker  
+networks:
+  private:
+    name: private
+    driver: overlay
+  public:
+    name: public
+    external: true   
